@@ -7,10 +7,33 @@ function SignupForm() {
 
     const passwordsMatch = password === confirmPassword;
 
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
+        event.preventDefault();
+
         if (!passwordsMatch) {
-            event.preventDefault();
+            return;
         }
+
+        const formData = new FormData(event.target);
+
+        const signupData = {
+            fullName: formData.get("name"),
+            username: formData.get("username"),
+            email: formData.get("email"),
+            password: formData.get("password")
+        };
+
+        const response = await fetch("http://localhost:3000/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(signupData)
+        });
+
+        const data = await response.json();
+
+        console.log(data);
     }
 
     return (
