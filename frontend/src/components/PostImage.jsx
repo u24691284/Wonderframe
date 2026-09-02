@@ -1,12 +1,9 @@
 import postImage from "../assets/posts.png";
 
-function PostImage() {
+function PostImage({ post }) {
     return (
         <div>
-            <img
-                src={postImage}
-                alt="Sunset in Pretoria"
-            />
+            <img src={postImage} alt={post.caption} />
         </div>
     );
 }

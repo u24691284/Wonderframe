@@ -1,20 +1,16 @@
 import PostPreview from "./PostPreview";
 
-function Feed() {
+function Feed({ posts }) {
     return (
         <section>
-            <h2>Feed</h2>
+            <h2>Posts from you and your friends</h2>
 
-            <div>
-                <button type="button">Local Feed</button>
-                <button type="button">Global Feed</button>
-            </div>
+            <button type="button">Local</button>
+            <button type="button">Global</button>
 
-            <p>Posts from you and your friends</p>
-
-            <PostPreview />
-            <PostPreview />
-            <PostPreview />
+            {posts.map((post) => (
+                <PostPreview key={post.id} post={post} />
+            ))}
         </section>
     );
 }

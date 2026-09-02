@@ -1,13 +1,13 @@
 import ProfilePreview from "./ProfilePreview";
 
-function FriendList() {
+function FriendList({ friends }) {
     return (
         <section>
             <h2>Friends</h2>
 
-            <ProfilePreview />
-            <ProfilePreview />
-            <ProfilePreview />
+            {friends.map((friend) => (
+                <ProfilePreview key={friend.id} user={friend} />
+            ))}
         </section>
     );
 }

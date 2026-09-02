@@ -1,23 +1,23 @@
 import { Link } from "react-router-dom";
 import profileImage from "../assets/profile.png";
 
-function Profile() {
+function Profile({ user }) {
     return (
         <section>
             <img src={profileImage} alt="Profile" />
 
-            <h2>Lisa Harrus</h2>
-            <p>@username</p>
-            <p>she/her</p>
+            <h2>{user.name}</h2>
+            <p>{user.username}</p>
+            <p>{user.pronouns}</p>
 
-            <p>This is my BIO.</p>
+            <p>{user.bio}</p>
 
-            <a href="#">links to other sites</a>
+            <a href="#">{user.socialLink}</a>
 
             <div>
-                <p>234 Posts</p>
-                <p>234 Albums</p>
-                <p>234 Friends</p>
+                <p>{user.posts} Posts</p>
+                <p>{user.albums} Albums</p>
+                <p>{user.friends} Friends</p>
             </div>
 
             <Link to="/edit-profile">

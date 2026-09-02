@@ -2,25 +2,25 @@ import PostImage from "./PostImage";
 import Comments from "./Comments";
 import EditPost from "./EditPost";
 
-function Post() {
+function Post({ post }) {
     return (
         <article>
             <header>
-                <h3>Tamima</h3>
-                <p>@tamima929</p>
-                <time>2 hours ago</time>
+                <h3>{post.name}</h3>
+                <p>{post.username}</p>
+                <time>{post.time}</time>
             </header>
 
-            <PostImage />
+            <PostImage post={post} />
 
-            <p>Sunset in Pretoria :)</p>
-            <p>#sunset #pretoria #photography</p>
+            <p>{post.caption}</p>
+            <p>{post.hashtags}</p>
 
-            <p>124 likes</p>
+            <p>{post.likes} likes</p>
 
-            <Comments />
+            <Comments comments={post.comments} />
 
-            {/*depending on if it is someone else post or yours, see if this shoudh appear*/}
+            {/*depending on if it is someone else post or yours, see if this should appear*/}
             <EditPost />
         </article>
     );
