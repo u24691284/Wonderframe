@@ -1,39 +1,38 @@
-const express = require("express");
-const cors = require("cors");
+// Student Number: u24691284
+
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+
+import { connectDB } from "./db.js";
+
+import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/users.js";
+import postRoutes from "./routes/posts.js";
+import albumRoutes from "./routes/albums.js";
+
+
+dotenv.config();
 
 const app = express();
+const PORT = 3000;
 
 app.use(cors());
 app.use(express.json());
 
-app.post("/login", (req, res) => {
-    const { email, password } = req.body;
+//routes
+app.use("/", authRoutes);
+app.use("/users", userRoutes);
+app.use("/posts", postRoutes);
+app.use("/albums", albumRoutes);
 
-    res.json({
-        success: true,
-        message: "Login successful",
-        user: {
-            id: 1,
-            email: email
-        }
+//start the server
+connectDB()
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`Server running on http://localhost:${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error("Failed to connect to MongoDB:", error);
     });
-});
-
-app.post("/signup", (req, res) => {
-    const { fullName, username, email, password } = req.body;
-
-    res.json({
-        success: true,
-        message: "Signup successful",
-        user: {
-            id: 1,
-            fullName: fullName,
-            username: username,
-            email: email
-        }
-    });
-});
-
-app.listen(3000, () => {
-    console.log("Listening on localhost:3000");
-});
