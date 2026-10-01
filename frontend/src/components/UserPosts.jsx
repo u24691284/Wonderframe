@@ -6,7 +6,10 @@ function UserPosts({ posts }) {
             <h2>Posts</h2>
 
             {posts.map((post) => (
-                <PostPreview key={post.id} post={post} />
+                <PostPreview
+                    key={post._id}
+                    post={post}
+                />
             ))}
         </section>
     );

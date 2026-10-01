@@ -6,7 +6,7 @@ function FriendList({ friends }) {
             <h2>Friends</h2>
 
             {friends.map((friend) => (
-                <ProfilePreview key={friend.id} user={friend} />
+                <ProfilePreview key={friend._id} user={friend} />
             ))}
         </section>
     );

@@ -1,30 +1,32 @@
 import { Link } from "react-router-dom";
 import profileImage from "../assets/profile.png";
 
-function Profile({ user }) {
+function Profile({ user, isOwnProfile }) {
     return (
         <section>
-            <img src={profileImage} alt="Profile" />
 
-            <h2>{user.name}</h2>
-            <p>{user.username}</p>
-            <p>{user.pronouns}</p>
+            <img
+                src={profileImage}
+                alt="Profile"
+            />
 
-            <p>{user.bio}</p>
+            <h2>{user.fullName}</h2>
 
-            <a href="#">{user.socialLink}</a>
+            <p>@{user.username}</p>
 
-            <div>
-                <p>{user.posts} Posts</p>
-                <p>{user.albums} Albums</p>
-                <p>{user.friends} Friends</p>
-            </div>
+            <p>
+                {user.friends?.length || 0} Friends
+            </p>
 
-            <Link to="/edit-profile">
-                <button type="button">
-                    Edit Profile
-                </button>
-            </Link>
+
+            {isOwnProfile && (
+                <Link to="/edit-profile">
+                    <button type="button">
+                        Edit Profile
+                    </button>
+                </Link>
+            )}
+
         </section>
     );
 }

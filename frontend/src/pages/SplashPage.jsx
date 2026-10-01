@@ -1,4 +1,4 @@
-import LoginForm from "../components/LoginForm";
+import { Link } from "react-router-dom";
 
 function SplashPage() {
     return (
@@ -21,7 +21,7 @@ function SplashPage() {
         
             </section>
 
-            <LoginForm />
+            <Link to="/login">Login</Link>
         </main>
     );
 }

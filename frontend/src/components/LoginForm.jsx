@@ -1,9 +1,12 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate} from "react-router-dom";
 
 function LoginForm() {
-        const handleSubmit = async (event) => {
+    const navigate = useNavigate();
+
+    const handleSubmit = async (event) => {
         event.preventDefault();
-console.log("FORM SUBMITTED")
+
         const formData = new FormData(event.target);
 
         const loginData = {
@@ -11,17 +14,30 @@ console.log("FORM SUBMITTED")
             password: formData.get("password")
         };
 
-        const response = await fetch("http://localhost:3000/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(loginData)
-        });
+        try {
+            const response = await fetch("http://localhost:3000/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(loginData)
+            });
 
-        const data = await response.json();
+            const data = await response.json();
 
-        console.log(data);
+            if (!response.ok) {
+                alert(data.message);
+                return;
+            }
+
+            localStorage.setItem("user", JSON.stringify(data.user));
+
+            navigate("/home");
+
+        } catch (error) {
+            console.error("Login error:", error);
+            alert("Could not connect to the server.");
+        }
     };
 
     return (

@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function SignupForm() {
+    const navigate = useNavigate();
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+
 
     const passwordsMatch = password === confirmPassword;
 
@@ -33,7 +35,18 @@ function SignupForm() {
 
         const data = await response.json();
 
-        console.log(data);
+        if (!response.ok) {
+            alert(data.message);
+            return;
+        }
+
+        console.log("Signup response:", data);
+
+localStorage.setItem("user", JSON.stringify(data.user));
+
+console.log("Navigating to home...");
+
+navigate("/home");
     }
 
     return (
@@ -82,7 +95,7 @@ function SignupForm() {
             <hr />
 
             <p>Already have an account?</p>
-            <Link to="/">Login</Link>
+            <Link to="/login">Login</Link>
         </section>
     );
 }

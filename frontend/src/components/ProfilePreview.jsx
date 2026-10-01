@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import profileImage from "../assets/profile.png";
 
 function ProfilePreview({ user }) {
@@ -6,9 +7,11 @@ function ProfilePreview({ user }) {
             <img src={profileImage} alt="Profile" />
 
             <div>
-                <h3>{user.name}</h3>
-                <p>{user.username}</p>
-                <p>{user.pronouns}</p>
+                <Link to={`/profile/${user._id}`}>
+                    <h3>{user.fullName}</h3>
+                </Link>
+
+                <p>@{user.username}</p>
             </div>
         </article>
     );

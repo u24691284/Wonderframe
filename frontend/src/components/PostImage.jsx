@@ -1,9 +1,12 @@
-import postImage from "../assets/posts.png";
-
 function PostImage({ post }) {
     return (
         <div>
-            <img src={postImage} alt={post.caption} />
+            {post.image && (
+                <img
+                    src={post.image}
+                    alt={post.description}
+                />
+            )}
         </div>
     );
 }
