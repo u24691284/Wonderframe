@@ -1,16 +1,13 @@
+
 import { useEffect, useState } from "react";
 
 function EditAlbum({ album, onAlbumChanged }) {
-    const loggedInUser = JSON.parse(
-        localStorage.getItem("user")
-    );
+    const loggedInUser = JSON.parse(sessionStorage.getItem("user"));
 
     const [name, setName] = useState(album.name || "");
-
     const [description, setDescription] = useState(
         album.description || ""
     );
-
     const [hashtags, setHashtags] = useState(
         Array.isArray(album.hashtags)
             ? album.hashtags.join(" ")
@@ -18,13 +15,11 @@ function EditAlbum({ album, onAlbumChanged }) {
     );
 
     const [message, setMessage] = useState("");
-
-    // Posts belonging to the logged-in user
     const [userPosts, setUserPosts] = useState([]);
     const [selectedPostId, setSelectedPostId] = useState("");
+    const [isEditing, setIsEditing] = useState(false);
 
-
-    // Load the logged-in user's posts
+    // Load user's posts
     useEffect(() => {
         async function loadUserPosts() {
             try {
@@ -38,26 +33,20 @@ function EditAlbum({ album, onAlbumChanged }) {
 
                 const data = await response.json();
 
-                const myPosts = data.filter(
-                    (post) =>
-                        String(post.userId) ===
-                        String(loggedInUser?.id)
+                setUserPosts(
+                    data.filter(
+                        (post) =>
+                            String(post.userId) ===
+                            String(loggedInUser?.id)
+                    )
                 );
-
-                setUserPosts(myPosts);
-
             } catch (error) {
-                console.error(
-                    "Error loading user posts:",
-                    error
-                );
+                console.error("Error loading user posts:", error);
             }
         }
 
         loadUserPosts();
-
     }, []);
-
 
     // Add post to album
     async function handleAddPost() {
@@ -83,28 +72,19 @@ function EditAlbum({ album, onAlbumChanged }) {
             const data = await response.json();
 
             if (!response.ok) {
-                setMessage(
-                    data.message || "Failed to add post."
-                );
+                setMessage(data.message || "Failed to add post.");
                 return;
             }
 
             setMessage("Post added to album!");
             setSelectedPostId("");
-
-            // Update album immediately
             await onAlbumChanged();
 
         } catch (error) {
-            console.error(
-                "Error adding post to album:",
-                error
-            );
-
+            console.error("Error adding post to album:", error);
             setMessage("Something went wrong.");
         }
     }
-
 
     // Edit album
     async function handleSubmit(event) {
@@ -115,9 +95,7 @@ function EditAlbum({ album, onAlbumChanged }) {
                 .split(/[\s,]+/)
                 .filter((tag) => tag.trim() !== "")
                 .map((tag) =>
-                    tag.startsWith("#")
-                        ? tag
-                        : `#${tag}`
+                    tag.startsWith("#") ? tag : `#${tag}`
                 );
 
             const response = await fetch(
@@ -138,30 +116,19 @@ function EditAlbum({ album, onAlbumChanged }) {
             const data = await response.json();
 
             if (!response.ok) {
-                setMessage(
-                    data.message ||
-                    "Failed to update album."
-                );
+                setMessage(data.message || "Failed to update album.");
                 return;
             }
 
-            setMessage(
-                "Album updated successfully!"
-            );
-
-            // Reload albums immediately
+            setMessage("Album updated successfully!");
+            setIsEditing(false);
             await onAlbumChanged();
 
         } catch (error) {
-            console.error(
-                "Error updating album:",
-                error
-            );
-
+            console.error("Error updating album:", error);
             setMessage("Something went wrong.");
         }
     }
-
 
     // Delete album
     async function handleDelete() {
@@ -169,9 +136,7 @@ function EditAlbum({ album, onAlbumChanged }) {
             "Are you sure you want to delete this album?"
         );
 
-        if (!confirmed) {
-            return;
-        }
+        if (!confirmed) return;
 
         try {
             const response = await fetch(
@@ -184,148 +149,176 @@ function EditAlbum({ album, onAlbumChanged }) {
             const data = await response.json();
 
             if (!response.ok) {
-                setMessage(
-                    data.message ||
-                    "Failed to delete album."
-                );
+                setMessage(data.message || "Failed to delete album.");
                 return;
             }
 
-            // Reload albums immediately
             await onAlbumChanged();
 
         } catch (error) {
-            console.error(
-                "Error deleting album:",
-                error
-            );
-
+            console.error("Error deleting album:", error);
             setMessage("Something went wrong.");
         }
     }
 
+    const inputStyle =
+        "w-full rounded-xl border-2 border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-brand-500 focus:ring-4 focus:ring-brand-100";
+
+    const labelStyle =
+        "mb-2 block text-sm font-semibold text-slate-700";
 
     return (
-        <section>
+        <section className="space-y-5 font-body">
 
             {/* ADD POST TO ALBUM */}
-            <h4>Add Post to Album</h4>
+            <div>
+                <h4 className="mb-3 text-base font-semibold text-slate-800">
+                    Add Post to Album
+                </h4>
 
-            <select
-                value={selectedPostId}
-                onChange={(event) =>
-                    setSelectedPostId(
-                        event.target.value
-                    )
-                }
-            >
-                <option value="">
-                    Select one of your posts
-                </option>
-
-                {userPosts.map((post) => (
-                    <option
-                        key={post._id}
-                        value={post._id}
+                <div className="flex flex-col gap-3 sm:flex-row">
+                    <select
+                        value={selectedPostId}
+                        onChange={(event) =>
+                            setSelectedPostId(event.target.value)
+                        }
+                        className={`${inputStyle} min-w-0 flex-1`}
                     >
-                        {post.description}
-                    </option>
-                ))}
+                        <option value="">
+                            Select one of your posts
+                        </option>
 
-            </select>
+                        {userPosts.map((post) => (
+                            <option
+                                key={post._id}
+                                value={post._id}
+                            >
+                                {post.description}
+                            </option>
+                        ))}
+                    </select>
 
-            <button
-                type="button"
-                onClick={handleAddPost}
-            >
-                Add Post
-            </button>
+                    <button
+                        type="button"
+                        onClick={handleAddPost}
+                        className="rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-brand-600"
+                    >
+                        + Add Post
+                    </button>
+                </div>
+            </div>
 
+            {/* ALBUM ACTIONS */}
+            <div className="flex flex-wrap items-center gap-3 border-t border-slate-200 pt-5">
 
-            {/* EDIT ALBUM */}
-            <h4>Edit Album</h4>
-
-            <form onSubmit={handleSubmit}>
-
-                <label
-                    htmlFor={`name-${album._id}`}
+                <button
+                    type="button"
+                    onClick={() => setIsEditing(!isEditing)}
+                    className="rounded-lg border-2 border-brand-500 px-5 py-2 text-sm font-semibold text-brand-600 transition hover:bg-brand-100"
                 >
-                    Album Name:
-                </label>
-
-                <br />
-
-                <input
-                    id={`name-${album._id}`}
-                    type="text"
-                    value={name}
-                    onChange={(event) =>
-                        setName(event.target.value)
-                    }
-                    required
-                />
-
-                <br />
-
-                <label
-                    htmlFor={`description-${album._id}`}
-                >
-                    Description:
-                </label>
-
-                <br />
-
-                <textarea
-                    id={`description-${album._id}`}
-                    value={description}
-                    onChange={(event) =>
-                        setDescription(
-                            event.target.value
-                        )
-                    }
-                />
-
-                <br />
-
-                <label
-                    htmlFor={`hashtags-${album._id}`}
-                >
-                    Hashtags:
-                </label>
-
-                <br />
-
-                <input
-                    id={`hashtags-${album._id}`}
-                    type="text"
-                    value={hashtags}
-                    onChange={(event) =>
-                        setHashtags(
-                            event.target.value
-                        )
-                    }
-                />
-
-                <br />
-
-                <button type="submit">
-                    Save Changes
+                    {isEditing ? "Cancel Editing" : "Edit Album"}
                 </button>
 
-            </form>
+                <button
+                    type="button"
+                    onClick={handleDelete}
+                    className="rounded-lg border border-red-200 bg-white px-5 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+                >
+                    Delete Album
+                </button>
+            </div>
 
+            {/* EDIT ALBUM FORM */}
+            {isEditing && (
+                <form
+                    onSubmit={handleSubmit}
+                    className="space-y-5 rounded-xl border border-slate-200 bg-white p-5"
+                >
+                    <h4 className="text-lg font-semibold text-slate-800">
+                        Edit Album Details
+                    </h4>
 
-            {/* DELETE ALBUM */}
-            <button
-                type="button"
-                onClick={handleDelete}
-            >
-                Delete Album
-            </button>
+                    <div>
+                        <label
+                            htmlFor={`name-${album._id}`}
+                            className={labelStyle}
+                        >
+                            Album Name
+                        </label>
 
+                        <input
+                            id={`name-${album._id}`}
+                            type="text"
+                            value={name}
+                            onChange={(event) =>
+                                setName(event.target.value)
+                            }
+                            required
+                            className={inputStyle}
+                        />
+                    </div>
 
+                    <div>
+                        <label
+                            htmlFor={`description-${album._id}`}
+                            className={labelStyle}
+                        >
+                            Description
+                        </label>
+
+                        <textarea
+                            id={`description-${album._id}`}
+                            value={description}
+                            onChange={(event) =>
+                                setDescription(event.target.value)
+                            }
+                            rows="3"
+                            className={`${inputStyle} resize-none`}
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor={`hashtags-${album._id}`}
+                            className={labelStyle}
+                        >
+                            Hashtags
+                        </label>
+
+                        <input
+                            id={`hashtags-${album._id}`}
+                            type="text"
+                            value={hashtags}
+                            onChange={(event) =>
+                                setHashtags(event.target.value)
+                            }
+                            placeholder="#travel #memories"
+                            className={inputStyle}
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="w-full rounded-xl bg-brand-500 px-6 py-3 font-semibold text-white transition hover:bg-brand-600"
+                    >
+                        Save Changes
+                    </button>
+                </form>
+            )}
+
+            {/* STATUS MESSAGE */}
             {message && (
-                <p>{message}</p>
+                <p
+                    role="status"
+                    className={`rounded-lg px-4 py-3 text-sm font-medium ${
+                        message === "Post added to album!" ||
+                        message === "Album updated successfully!"
+                            ? "bg-brand-100 text-brand-600"
+                            : "bg-red-50 text-red-600"
+                    }`}
+                >
+                    {message}
+                </p>
             )}
 
         </section>
