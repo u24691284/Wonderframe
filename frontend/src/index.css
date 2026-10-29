@@ -8,3 +8,13 @@
     --font-body: "Poppins", sans-serif;
     --font-display: "Playfair Display", serif;
 }
+
+/* splash, login and signup background */
+.auth-background {
+    background-image:
+        linear-gradient(
+            rgba(0, 30, 40, 0.35),
+            rgba(0, 30, 40, 0.45)
+        ),
+        url("./assets/splash_page.jpg");
+}

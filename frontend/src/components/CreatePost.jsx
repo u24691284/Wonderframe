@@ -1,29 +1,62 @@
+
 import { useState } from "react";
 
 function CreatePost() {
     const [message, setMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const loggedInUser = JSON.parse();
+    const loggedInUser = JSON.parse(sessionStorage.getItem("user") || "null");
 
+    // convert image to base64
+    function convertImageToBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error("Failed to read image"));
+
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // create a new post
     async function handleSubmit(event) {
         event.preventDefault();
 
+        if (isSubmitting) return;
+
+        if (!loggedInUser?.id) {
+            setMessage("Please log in to create a post.");
+            return;
+        }
+
+        const form = event.currentTarget;
+        const imageFile = form.elements.namedItem("postImage")?.files?.[0];
+        const description = form.elements.namedItem("caption")?.value.trim();
+        const hashtagText = form.elements.namedItem("hashtag")?.value || "";
+
+        if (!imageFile || !description) {
+            setMessage("Please add an image and caption.");
+            return;
+        }
+
+        if (!imageFile.type.startsWith("image/")) {
+            setMessage("Please select a valid image.");
+            return;
+        }
+
+        if (imageFile.size > 5 * 1024 * 1024) {
+            setMessage("Please select an image smaller than 5 MB.");
+            return;
+        }
+
+        setIsSubmitting(true);
+        setMessage("");
+
         try {
-            const form = event.target;
-
-            const imageFile = form.postImage.files[0];
-            const description = form.caption.value;
-            const hashtagText = form.hashtag.value;
-
-            if (!imageFile || !description) {
-                setMessage("Please add an image and caption.");
-                return;
-            }
-
-            // Convert image to Base64
             const image = await convertImageToBase64(imageFile);
 
-            // Convert hashtags into an array
+            // convert hashtags into an array
             const hashtags = hashtagText
                 .split(/[\s,]+/)
                 .filter((tag) => tag.trim() !== "")
@@ -31,21 +64,18 @@ function CreatePost() {
                     tag.startsWith("#") ? tag : `#${tag}`
                 );
 
-            const response = await fetch(
-                "http://localhost:3000/posts",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        userId: loggedInUser.id,
-                        image: image,
-                        description: description,
-                        hashtags: hashtags
-                    })
-                }
-            );
+            const response = await fetch("http://localhost:3000/posts", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    userId: loggedInUser.id,
+                    image,
+                    description,
+                    hashtags
+                })
+            });
 
             const data = await response.json();
 
@@ -60,23 +90,9 @@ function CreatePost() {
         } catch (error) {
             console.error("Error creating post:", error);
             setMessage("Something went wrong.");
+        } finally {
+            setIsSubmitting(false);
         }
-    }
-
-    function convertImageToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-
-            reader.onload = () => {
-                resolve(reader.result);
-            };
-
-            reader.onerror = () => {
-                reject(new Error("Failed to read image"));
-            };
-
-            reader.readAsDataURL(file);
-        });
     }
 
     const inputStyle =
@@ -88,7 +104,7 @@ function CreatePost() {
     return (
         <section className="font-body">
 
-            {/* HEADING */}
+            {/* heading */}
             <div className="mb-6">
                 <h2 className="text-2xl font-bold text-slate-800">
                     Create Post
@@ -101,12 +117,9 @@ function CreatePost() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
 
-                {/* IMAGE UPLOAD */}
+                {/* image upload */}
                 <div>
-                    <label
-                        htmlFor="postImage"
-                        className={labelStyle}
-                    >
+                    <label htmlFor="postImage" className={labelStyle}>
                         Post Image
                     </label>
 
@@ -121,17 +134,14 @@ function CreatePost() {
                         />
 
                         <p className="mt-3 text-xs text-slate-400">
-                            Choose a photo from your device.
+                            Choose a photo from your device (maximum 5 MB).
                         </p>
                     </div>
                 </div>
 
-                {/* CAPTION */}
+                {/* caption */}
                 <div>
-                    <label
-                        htmlFor="caption"
-                        className={labelStyle}
-                    >
+                    <label htmlFor="caption" className={labelStyle}>
                         Caption
                     </label>
 
@@ -145,12 +155,9 @@ function CreatePost() {
                     />
                 </div>
 
-                {/* HASHTAGS */}
+                {/* hashtags */}
                 <div>
-                    <label
-                        htmlFor="hashtag"
-                        className={labelStyle}
-                    >
+                    <label htmlFor="hashtag" className={labelStyle}>
                         Hashtags
                     </label>
 
@@ -167,17 +174,17 @@ function CreatePost() {
                     </p>
                 </div>
 
-                {/* SUBMIT */}
+                {/* submit */}
                 <button
                     type="submit"
-                    className="w-full rounded-xl bg-brand-500 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-100"
+                    disabled={isSubmitting}
+                    className="w-full rounded-xl bg-brand-500 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                    + Create Post
+                    {isSubmitting ? "Creating Post..." : "+ Create Post"}
                 </button>
-
             </form>
 
-            {/* STATUS MESSAGE */}
+            {/* status message */}
             {message && (
                 <p
                     role="status"
@@ -190,7 +197,6 @@ function CreatePost() {
                     {message}
                 </p>
             )}
-
         </section>
     );
 }

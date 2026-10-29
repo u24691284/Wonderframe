@@ -1,18 +1,9 @@
 
 import { Link } from "react-router-dom";
-import splashImage from "../assets/splash_page.jpg";
 
 function SplashPage() {
     return (
-        <main
-            className="flex min-h-screen items-center justify-center bg-cover bg-center p-6"
-            style={{
-                backgroundImage: `linear-gradient(
-                    rgba(0,30,40,0.35),
-                    rgba(0,30,40,0.45)
-                ), url(${splashImage})`
-            }}
-        >
+        <main className="auth-background flex min-h-screen items-center justify-center bg-cover bg-center p-6">
             <div className="grid w-full max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-2">
 
                 {/* LEFT SIDE */}

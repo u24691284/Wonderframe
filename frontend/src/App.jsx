@@ -1,5 +1,5 @@
 
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import SplashPage from "./pages/SplashPage";
 import HomePage from "./pages/HomePage";
@@ -12,36 +12,81 @@ import Navigation from "./components/Navigation";
 import EditProfile from "./components/EditProfile";
 import CreatePost from "./components/CreatePost";
 
+// protect pages that require login
+function ProtectedRoute({ children }) {
+    const user = sessionStorage.getItem("user");
+
+    return user ? children : <Navigate to="/" replace />;
+}
+
 function App() {
     return (
         <BrowserRouter>
             <Routes>
+                {/* public pages */}
                 <Route path="/" element={<SplashPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/home" element={<HomePage />} />
-                <Route path="/profile/:id" element={<ProfilePage />} />
-                <Route path="/post/:id" element={<PostPage />} />
-                <Route path="/edit-profile" element={<EditProfile />} />
 
-                {/* create post page */}
+                {/* protected home */}
                 <Route
-                    path="/create-post"
+                    path="/home"
                     element={
-                        <div className="min-h-screen bg-slate-50 font-body">
-                            <Navigation />
-
-                            <main className="min-w-0 px-4 py-8 md:ml-60 md:px-8">
-                                <div className="mx-auto w-full max-w-2xl">
-                                    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                                        <CreatePost />
-                                    </section>
-                                </div>
-                            </main>
-                        </div>
+                        <ProtectedRoute>
+                            <HomePage />
+                        </ProtectedRoute>
                     }
                 />
 
+                {/* protected profile */}
+                <Route
+                    path="/profile/:id"
+                    element={
+                        <ProtectedRoute>
+                            <ProfilePage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* protected post */}
+                <Route
+                    path="/post/:id"
+                    element={
+                        <ProtectedRoute>
+                            <PostPage />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* protected edit profile */}
+                <Route
+                    path="/edit-profile"
+                    element={
+                        <ProtectedRoute>
+                            <EditProfile />
+                        </ProtectedRoute>
+                    }
+                />
+
+                {/* protected create post */}
+                <Route
+                    path="/create-post"
+                    element={
+                        <ProtectedRoute>
+                            <div className="min-h-screen bg-slate-50 font-body">
+                                <Navigation />
+
+                                <main className="min-w-0 px-4 py-8 md:ml-60 md:px-8">
+                                    <div className="mx-auto w-full max-w-2xl">
+                                        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+                                            <CreatePost />
+                                        </section>
+                                    </div>
+                                </main>
+                            </div>
+                        </ProtectedRoute>
+                    }
+                />
             </Routes>
         </BrowserRouter>
     );

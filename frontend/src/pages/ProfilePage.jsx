@@ -342,6 +342,8 @@ function ProfilePage() {
         (friendId) => String(friendId) === String(user?._id)
     );
 
+    const canViewProfile = isOwnProfile || isFriend;
+
     const requestSent = user?.friendRequests?.some(
         (requestId) => String(requestId) === String(loggedInUserId)
     );
@@ -461,6 +463,12 @@ function ProfilePage() {
                                 </p>
                             )}
 
+                            {!canViewProfile && (
+                                <p className="rounded-xl bg-white p-6 text-center text-slate-500">
+                                    Add this user as a friend to view their posts, albums and friends.
+                                </p>
+                            )}
+                            
                             {/* create post */}
                             {isOwnProfile && selectedSection === "posts" && (
                                 <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
