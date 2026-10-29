@@ -59,18 +59,17 @@ router.put("/:id", async (req, res) => {
     try {
         const db = getDB();
         const usersCollection = db.collection("users");
+        const { fullName, username, email, profileImage } = req.body;
+        const updates = { fullName, username, email };
 
-        const { fullName, username, email } = req.body;
+        // update the picture only when one is provided
+        if (profileImage !== undefined) {
+            updates.profileImage = profileImage;
+        }
 
         const result = await usersCollection.updateOne(
             { _id: new ObjectId(req.params.id) },
-            {
-                $set: {
-                    fullName,
-                    username,
-                    email
-                }
-            }
+            { $set: updates }
         );
 
         if (result.matchedCount === 0) {
@@ -121,93 +120,179 @@ router.delete("/:id", async (req, res) => {
     }
 });
 
-//add a friend
-router.put("/:id/friends", async (req, res) => {
+
+ // send a friend request
+router.post("/:id/friend-requests", async (req, res) => {
     try {
-        const db = getDB();
-        const usersCollection = db.collection("users");
-
         const { friendId } = req.body;
+        const senderId = req.params.id;
 
-        if (!friendId) {
+        if (!ObjectId.isValid(senderId) || !ObjectId.isValid(friendId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+
+
+        const users = getDB().collection("users");
+        const sender = await users.findOne({ _id: new ObjectId(senderId) });
+        const receiver = await users.findOne({ _id: new ObjectId(friendId) });
+
+        if (!sender || !receiver) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (String(sender._id) === String(receiver._id)) {
             return res.status(400).json({
-                message: "Friend ID is required"
+                message: "You cannot send yourself a friend request"
             });
         }
 
-        const friend = await usersCollection.findOne({
-            _id: new ObjectId(friendId)
-        });
+        if (
+            (sender.friends || []).some((id) => String(id) === friendId) ||
+            (receiver.friends || []).some((id) => String(id) === senderId)
+        ) {
+            return res.status(400).json({ message: "Already friends" });
+        }
 
-        if (!friend) {
-            return res.status(404).json({
-                message: "Friend not found"
+        if (
+            (receiver.friendRequests || []).some(
+                (id) => String(id) === senderId
+            )
+        ) {
+            return res.status(400).json({
+                message: "Friend request already sent"
             });
         }
 
-        const result = await usersCollection.updateOne(
-            { _id: new ObjectId(req.params.id) },
-            {
-                //use add to set as it wont add the same friend twice
-                $addToSet: {
-                    friends: new ObjectId(friendId)
-                }
-            }
+        if (
+            (sender.friendRequests || []).some(
+                (id) => String(id) === friendId
+            )
+        ) {
+            return res.status(400).json({
+                message: "This user has already sent you a request"
+            });
+        }
+
+        await users.updateOne(
+            { _id: receiver._id },
+            { $addToSet: { friendRequests: sender._id } }
         );
 
-        if (result.matchedCount === 0) {
-            return res.status(404).json({
-                message: "User not found"
-            });
-        }
-
-        res.status(200).json({
-            message: "Friend added successfully"
-        });
+        res.json({ message: "Friend request sent" });
 
     } catch (error) {
-        console.error("Failed to add friend:", error);
-
-        res.status(500).json({
-            message: "Failed to add friend"
-        });
+        console.error("Error sending friend request:", error);
+        res.status(500).json({ message: "Failed to send request" });
     }
 });
 
-// Remove a friend
-router.delete("/:id/friends/:friendId", async (req, res) => {
+// accept a friend request
+router.put("/:id/friend-requests/:senderId", async (req, res) => {
     try {
-        const db = getDB();
-        const usersCollection = db.collection("users");
+        const { id, senderId } = req.params;
 
-        const userId = req.params.id;
-        const friendId = req.params.friendId;
+        if (!ObjectId.isValid(id) || !ObjectId.isValid(senderId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
 
-        const result = await usersCollection.updateOne(
-            { _id: new ObjectId(userId) },
-            {
-                $pull: {
-                    friends: new ObjectId(friendId)
-                }
-            }
+        const users = getDB().collection("users");
+        const receiverId = new ObjectId(id);
+        const requesterId = new ObjectId(senderId);
+
+        const receiver = await users.findOne({ _id: receiverId });
+        const sender = await users.findOne({ _id: requesterId });
+
+        if (!receiver || !sender) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const hasRequest = (receiver.friendRequests || []).some(
+            (requestId) => String(requestId) === senderId
         );
 
-        if (result.matchedCount === 0) {
-            return res.status(404).json({
-                message: "User not found"
+        if (!hasRequest) {
+            return res.status(400).json({
+                message: "Friend request not found"
             });
         }
 
-        res.status(200).json({
-            message: "Friend removed successfully"
-        });
+        await users.updateOne(
+            { _id: receiverId },
+            {
+                $pull: { friendRequests: requesterId },
+                $addToSet: { friends: requesterId }
+            }
+        );
+
+        await users.updateOne(
+            { _id: requesterId },
+            { $addToSet: { friends: receiverId } }
+        );
+
+        res.json({ message: "Friend request accepted" });
+
+    } catch (error) {
+        console.error("Error accepting friend request:", error);
+        res.status(500).json({ message: "Failed to accept request" });
+    }
+});
+
+// reject or cancel a friend request
+router.delete("/:id/friend-requests/:senderId", async (req, res) => {
+    try {
+        const { id, senderId } = req.params;
+
+        if (!ObjectId.isValid(id) || !ObjectId.isValid(senderId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+
+        const result = await getDB().collection("users").updateOne(
+            { _id: new ObjectId(id) },
+            { $pull: { friendRequests: new ObjectId(senderId) } }
+        );
+
+        if (!result.matchedCount) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({ message: "Friend request removed" });
+
+    } catch (error) {
+        console.error("Error removing friend request:", error);
+        res.status(500).json({ message: "Failed to remove request" });
+    }
+});
+
+// remove a friend from both users
+router.delete("/:id/friends/:friendId", async (req, res) => {
+    try {
+        const { id, friendId } = req.params;
+
+        if (!ObjectId.isValid(id) || !ObjectId.isValid(friendId)) {
+            return res.status(400).json({ message: "Invalid user ID" });
+        }
+
+        const users = getDB().collection("users");
+
+        const result = await users.updateOne(
+            { _id: new ObjectId(id) },
+            { $pull: { friends: new ObjectId(friendId) } }
+        );
+
+        if (!result.matchedCount) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        await users.updateOne(
+            { _id: new ObjectId(friendId) },
+            { $pull: { friends: new ObjectId(id) } }
+        );
+
+        res.json({ message: "Friend removed successfully" });
 
     } catch (error) {
         console.error("Error removing friend:", error);
-
-        res.status(500).json({
-            message: "Failed to remove friend"
-        });
+        res.status(500).json({ message: "Failed to remove friend" });
     }
 });
 

@@ -32,7 +32,8 @@ router.post("/signup", async (req, res) => {
             username,
             email,
             password,
-            friends: []
+            friends: [],
+            friendRequests: []
         };
 
         const result = await users.insertOne(newUser);
