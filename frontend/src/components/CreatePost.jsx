@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 
 function CreatePost() {
     const [message, setMessage] = useState("");
 
-    const loggedInUser = JSON.parse(sessionStorage.getItem("user"));
+    const loggedInUser = JSON.parse();
 
     async function handleSubmit(event) {
         event.preventDefault();

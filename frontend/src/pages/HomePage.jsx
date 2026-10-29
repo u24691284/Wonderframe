@@ -13,6 +13,8 @@ function HomePage() {
     const [posts, setPosts] = useState([]);
     const [friendIds, setFriendIds] = useState([]);
 
+    const [albums, setAlbums] = useState([]);
+
     // load all posts
     useEffect(() => {
         async function loadPosts() {
@@ -61,6 +63,24 @@ function HomePage() {
         loadCurrentUser();
     }, [loggedInUser?.id]);
 
+
+    // Load albums for the activity feed
+    useEffect(() => {
+        async function loadAlbums() {
+            try {
+                const response = await fetch("http://localhost:3000/albums");
+
+                if (!response.ok) throw new Error("Failed to load albums");
+
+                setAlbums(await response.json());
+            } catch (error) {
+                console.error("Error loading albums:", error);
+            }
+        }
+
+        loadAlbums();
+    }, []);
+
     return (
         <div className="min-h-screen bg-slate-50 font-body">
 
@@ -98,6 +118,7 @@ function HomePage() {
                     <section>
                         <Feed
                             posts={posts}
+                            albums={albums}
                             currentUserId={loggedInUser?.id}
                             friendIds={friendIds}
                         />
