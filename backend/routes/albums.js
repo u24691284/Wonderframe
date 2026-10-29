@@ -185,21 +185,35 @@ router.put("/:id/posts", async (req, res) => {
         }
 
         // Add post to album
-        // $addToSet prevents the same post being added twice
         const result = await albumsCollection.updateOne(
             {
-                _id: new ObjectId(albumId)
+                _id: new ObjectId(albumId),
+                posts: { $ne: new ObjectId(postId) }
             },
             {
-                $addToSet: {
+                $addToSet: { //prevents the same post being added twice
                     posts: new ObjectId(postId)
+                },
+                $push: {
+                    activities: {
+                        type: "post_added",
+                        postId: new ObjectId(postId),
+                        createdAt: new Date()
+                    }
                 }
             }
         );
 
+
         if (result.matchedCount === 0) {
-            return res.status(404).json({
-                message: "Album not found"
+            const albumExists = await albumsCollection.findOne({
+                _id: new ObjectId(albumId)
+            });
+
+            return res.status(albumExists ? 409 : 404).json({
+                message: albumExists
+                    ? "Post is already in this album"
+                    : "Album not found"
             });
         }
 
