@@ -13,7 +13,7 @@ the database.
 
 ================ DOCKER INSTRUCTIONS ================
 
-BACKEND
+===BACKEND===
 
 Build the backend Docker image:
 
@@ -21,10 +21,10 @@ docker build -t wonderframe-backend ./backend
 
 Run the backend container:
 
-docker run -p 3000:3000 wonderframe-backend
+docker run --env-file ./backend/.env -p 3000:3000 wonderframe-backend
 
 
-FRONTEND
+===FRONTEND===
 
 Build the frontend Docker image:
 
@@ -47,31 +47,17 @@ Backend:
 http://localhost:3000
 
 
-================ RUNNING WITHOUT DOCKER ================
-
-Backend:
-
-cd backend
-npm install
-npm start
-
-
-Frontend:
-
-cd frontend
-npm install
-npm run dev
-
-
 ================ DATABASE ================
 
 The application uses MongoDB Atlas.
 
-The MongoDB Atlas connection string required for marking is
-provided separately in the submission ZIP.
+Create a backend/.env file containing:
 
-Make sure the database connection is configured before starting
-the backend.
+MONGO_URI=your_mongodb_atlas_connection_string
+
+The exported MongoDB database is included in the ClickUP submission ZIP.
+
+Ensure the database connection is configured before running the backend.
 
 
 ================ GITHUB REPOSITORY ================
